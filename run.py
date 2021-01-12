@@ -5,6 +5,7 @@ import logging
 import json
 import sys
 import argparse
+import time
 
 from influxdb_client import InfluxDBClient
 
@@ -15,12 +16,29 @@ def setup_args(parser):
         action="store_true",
         help="Enable debug messages"
     )
+    parser.set_defaults(cmd="default")
+
+    subparsers = parser.add_subparsers()
+    loop_parser = subparsers.add_parser(
+        "loop",
+        help="Loop test"
+    )
+    loop_parser.set_defaults(cmd="loop")
+    loop_parser.add_argument(
+        "--timeout",
+        help="Timeout period (s)",
+        type=int,
+        default=1800  # default once every 30 mins
+    )
 
 
 def collect_speed_test_results():
+    cmd = "speedtest"
+    if sys.platform == "win32":
+        cmd = "C:/Users/gurpals/Downloads/speedtest.exe"
     logging.info("Running Speedtest CLI")
     output = subprocess.run([
-        "speedtest",
+        cmd,
         "--accept-license",
         "--accept-gdpr",
         "-f",
@@ -83,10 +101,7 @@ def format_for_influx(results):
     return influx_data
 
 
-def main(args):
-    results = collect_speed_test_results()
-    data_to_write = format_for_influx(results)
-
+def write_data_to_influx(data_to_write):
     influx_client = InfluxDBClient(url=InfluxDB.url, token=InfluxDB.token, org=InfluxDB.org)
     logging.info("Writing to InfluxDB")
     write_client = influx_client.write_api()
@@ -94,6 +109,17 @@ def main(args):
 
     write_client.__del__()
     influx_client.__del__()
+
+
+def main(parsed_args):
+    while 1:
+        results = collect_speed_test_results()
+        data_to_write = format_for_influx(results)
+        write_data_to_influx(data_to_write)
+        if parsed_args.cmd != "loop":
+            break
+        logging.info(f"Sleeping for {parsed_args.timeout} seconds.")
+        time.sleep(parsed_args.timeout)
 
 
 if __name__ == '__main__':
