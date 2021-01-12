@@ -20,7 +20,7 @@ def setup_args(parser):
 def collect_speed_test_results():
     logging.info("Running Speedtest CLI")
     output = subprocess.run([
-        "C:/Users/gurpals/Downloads/speedtest.exe",
+        "speedtest",
         "--accept-license",
         "--accept-gdpr",
         "-f",
