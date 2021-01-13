@@ -22,4 +22,4 @@ RUN rm -rf /var/lib/apt/lists/*
 # Final setup & execution
 COPY . /app
 WORKDIR /app
-CMD ["python3", "-u", "run.py"]
+CMD ["python3", "-u", "run.py", "loop"]
