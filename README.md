@@ -15,3 +15,4 @@ docker run -it --rm --name influx \
     influxdb:1.8
 ```
 2. Build and run docker image
+3. If you run into issues, ensure that both images are running on the same docker network
